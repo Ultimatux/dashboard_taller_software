@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Taller de Software</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.25s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-2 sm:p-4 md:p-6 overflow-x-hidden">
+
+  <div class="w-full max-w-7xl mx-auto space-y-4 sm:space-y-6">
+    
+    <header class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white rounded-2xl p-4 sm:p-6 md:p-8 border border-slate-800 shadow-2xl relative overflow-hidden">
+      <div class="absolute -right-10 -bottom-10 opacity-10 text-7xl sm:text-9xl font-black select-none pointer-events-none">TS</div>
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+        <div>
+          <span class="inline-block bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider mb-2 sm:mb-3">
+            Tecnicatura Superior en Programación y Análisis de Sistemas
+          </span>
+          <h1 class="text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white">Taller de Software - Dashboard</h1>
+          <p class="text-slate-300 text-xs sm:text-sm md:text-base mt-1 max-w-2xl">
+            Plataforma interactiva de consulta integral: Clasificación, Archivos, Seguridad y Mantenimiento del Sistema Operativo.
+          </p>
+        </div>
+      </div>
+
+      <!-- BARRA DE BÚSQUEDA EN TIEMPO REAL -->
+      <div class="mt-4 sm:mt-6 relative z-10">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="searchInput" 
+            oninput="filterContent()" 
+            placeholder="🔍 Buscar conceptos (ej: SSD, TRIM, Open Source, logs, temporales, .exe, CPU)..." 
+            class="w-full bg-slate-800/90 text-white placeholder-slate-400 border border-slate-700 rounded-xl py-2.5 sm:py-3 pl-10 sm:pl-11 pr-4 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          >
+          <span class="absolute left-3.5 top-2.5 sm:top-3.5 text-slate-400 text-xs sm:text-sm">🔎</span>
+        </div>
+        <p id="searchStats" class="text-xs text-blue-400 mt-2 hidden"></p>
+      </div>
+    </header>
+
+    <div class="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3 border-b border-slate-800 pb-3">
+      
+      <!-- PESTAÑAS RESPONSIVE -->
+      <nav class="grid grid-cols-2 md:grid-cols-4 gap-2 w-full flex-1" id="tabsNav">
+        <button onclick="switchTab(event, 'tab-clasificacion')" class="tab-btn active bg-blue-600 text-white shadow-lg font-semibold text-xs sm:text-sm px-2.5 sm:px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-all w-full text-center">
+          <span class="shrink-0">💻</span> <span class="truncate">1. Clasificación</span>
+        </button>
+        <button onclick="switchTab(event, 'tab-archivos')" class="tab-btn bg-slate-800 text-slate-300 hover:bg-slate-700/80 font-semibold text-xs sm:text-sm px-2.5 sm:px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-all w-full text-center">
+          <span class="shrink-0">📁</span> <span class="truncate">2. Archivos y Ext.</span>
+        </button>
+        <button onclick="switchTab(event, 'tab-seguridad')" class="tab-btn bg-slate-800 text-slate-300 hover:bg-slate-700/80 font-semibold text-xs sm:text-sm px-2.5 sm:px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-all w-full text-center">
+          <span class="shrink-0">🛡️</span> <span class="truncate">3. Seguridad y Gestión</span>
+        </button>
+        <button onclick="switchTab(event, 'tab-mantenimiento')" class="tab-btn bg-slate-800 text-slate-300 hover:bg-slate-700/80 font-semibold text-xs sm:text-sm px-2.5 sm:px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 transition-all w-full text-center">
+          <span class="shrink-0">⚙️</span> <span class="truncate">4. Mantenimiento y S.O.</span>
+        </button>
+      </nav>
+
+      <!-- BOTONES DE ACCIÓN PARA ACORDEONES -->
+      <div class="flex items-center justify-end gap-2 shrink-0">
+        <button onclick="setAccordions(true)" class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg transition-all font-medium">
+          📂 Desplegar Todo
+        </button>
+        <button onclick="setAccordions(false)" class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg transition-all font-medium">
+          📁 Plegar Todo
+        </button>
+      </div>
+    </div>
+
+    <main id="tab-clasificacion" class="tab-content active space-y-4 sm:space-y-6">
+      
+      <!-- DEFINICIONES -->
+      <div class="searchable-card bg-slate-800 p-4 sm:p-6 rounded-2xl border border-slate-700/70 shadow-md space-y-4">
+        <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+          <span class="p-2 bg-blue-900/50 text-blue-400 rounded-lg text-base">📘</span> 
+          Conceptos Fundamentales y Definiciones
+        </h2>
+        <p class="text-sm leading-relaxed text-slate-200">
+          El <strong class="text-white">software</strong> es el conjunto organizado de programas, instrucciones, reglas informáticas y datos que permiten que un sistema informático realice tareas específicas y funcione adecuadamente. Constituye el componente lógico e intangible que interactúa con el hardware.
+        </p>
+        <p class="text-xs sm:text-sm text-slate-400">
+          A diferencia del hardware (componentes físicos tangibles), el software establece los procesos para automatizar tareas, procesar información y brindar servicios digitales. Incluye programas ejecutables, procedimientos, documentación técnica y de usuario, y bases de datos asociadas.
+        </p>
+
+        <h3 class="text-xs sm:text-sm font-semibold text-slate-300 uppercase tracking-wider pt-2">Definiciones según Autores y Estándares Referentes:</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+          <div class="bg-emerald-950/40 border-l-4 border-emerald-500 p-3 sm:p-4 rounded-r-xl">
+            <p class="text-xs font-bold text-emerald-400 uppercase">Pressman (2010)</p>
+            <p class="text-xs sm:text-sm italic mt-1 text-slate-300">"El software es la suma total de programas, procedimientos, reglas, documentación y datos asociados que forman parte de la operación de un sistema informático."</p>
+          </div>
+          <div class="bg-emerald-950/40 border-l-4 border-emerald-500 p-3 sm:p-4 rounded-r-xl">
+            <p class="text-xs font-bold text-emerald-400 uppercase">IEEE 610.12-1990</p>
+            <p class="text-xs sm:text-sm italic mt-1 text-slate-300">"Software es la colección de programas, procedimientos, reglas y cualquier documentación relacionada y datos asociados que son parte de la operación de un sistema de cómputo."</p>
+          </div>
+          <div class="bg-emerald-950/40 border-l-4 border-emerald-500 p-3 sm:p-4 rounded-r-xl">
+            <p class="text-xs font-bold text-emerald-400 uppercase">Sommerville (2016)</p>
+            <p class="text-xs sm:text-sm italic mt-1 text-slate-300">"El software son programas informáticos y la documentación asociada, como requerimientos, modelos de diseño y manuales de usuario."</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACCORDIONS CLASIFICACIÓN -->
+      <details class="ts-accordion searchable-card bg-slate-800 border border-slate-700/70 rounded-xl overflow-hidden group" open>
+        <summary class="p-4 font-semibold text-sm sm:text-base text-slate-200 cursor-pointer bg-slate-800/90 hover:bg-slate-700/50 flex justify-between items-center transition-colors">
+          <span>A. Clasificación Funcional del Software</span>
+          <span class="transform group-open:rotate-180 transition-transform text-slate-400">▼</span>
+        </summary>
+        <div class="p-4 sm:p-5 border-t border-slate-700/50">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-700">
+              <h4 class="font-bold text-blue-400 text-sm sm:text-base">1. Software de Sistema</h4>
+              <p class="text-xs sm:text-sm text-slate-300 mt-2"><strong class="text-white">Definición:</strong> Programas, utilidades y controladores que gestionan y optimizan los recursos de hardware, sirviendo de base para otros programas.</p>
+              <p class="text-xs text-slate-400 mt-2"><strong class="text-slate-300">Ejemplos:</strong> Windows, Linux, macOS, Android, Drivers de video/red, Utilidades del sistema.</p>
+            </div>
+            <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-700">
+              <h4 class="font-bold text-emerald-400 text-sm sm:text-base">2. Software de Aplicación</h4>
+              <p class="text-xs sm:text-sm text-slate-300 mt-2"><strong class="text-white">Definición:</strong> Programas diseñados para el usuario final con el propósito de realizar tareas específicas y solucionar necesidades particulares.</p>
+              <p class="text-xs text-slate-400 mt-2"><strong class="text-slate-300">Ejemplos:</strong> Word, Excel, Chrome, Firefox, Photoshop, Spotify, LibreOffice.</p>
+            </div>
+            <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-700">
+              <h4 class="font-bold text-amber-400 text-sm sm:text-base">3. Software de Programación</h4>
+              <p class="text-xs sm:text-sm text-slate-300 mt-2"><strong class="text-white">Definición:</strong> Conjunto de herramientas utilizadas por desarrolladores para crear, probar, depurar y mantener nuevos programas informáticos.</p>
+              <p class="text-xs text-slate-400 mt-2"><strong class="text-slate-300">Ejemplos:</strong> VS Code, PyCharm, Compiladores (GCC), Intérpretes (Python), Git.</p>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="ts-accordion searchable-card bg-slate-800 border border-slate-700/70 rounded-xl overflow-hidden group">
+        <summary class="p-4 font-semibold text-sm sm:text-base text-slate-200 cursor-pointer bg-slate-800/90 hover:bg-slate-700/50 flex justify-between items-center transition-colors">
+          <span>B. Clasificación según su Alojamiento</span>
+          <span class="transform group-open:rotate-180 transition-transform text-slate-400">▼</span>
+        </summary>
+        <div class="p-4 sm:p-5 border-t border-slate-700/50">
+          <ul class="space-y-3 text-xs sm:text-sm">
+            <li class="p-3 bg-slate-900/50 rounded-lg border border-slate-700/50"><strong class="text-white">Software Residente:</strong> Alojado en memoria interna permanente (ROM, firmware, chip BIOS/UEFI). Indispensable para el arranque (bootstrapping). <em class="text-slate-400">Ejemplos: BIOS/UEFI, Firmware de router, impresoras.</em></li>
+            <li class="p-3 bg-slate-900/50 rounded-lg border border-slate-700/50"><strong class="text-white">Software Almacenado en Disco:</strong> Guardado permanentemente en memorias secundarias (HDD, SSD, USB). Se carga en RAM solo al ejecutarse. <em class="text-slate-400">Ejemplos: Juegos, Office, SO instalado.</em></li>
+            <li class="p-3 bg-slate-900/50 rounded-lg border border-slate-700/50"><strong class="text-white">Software Cargado en Memoria (en ejecución):</strong> Reside temporalmente en la RAM activa mientras el procesador ejecuta sus instrucciones. <em class="text-slate-400">Ejemplos: Apps en uso, procesos en segundo plano.</em></li>
+            <li class="p-3 bg-slate-900/50 rounded-lg border border-slate-700/50"><strong class="text-white">Software Embebido (Empotrado):</strong> Alojado en memorias no volátiles integradas en dispositivos electrónicos específicos. <em class="text-slate-400">Ejemplos: Smart TV, firmware automotriz, cámaras digitales.</em></li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- C. DISPONIBILIDAD DEL CÓDIGO FUENTE -->
+      <details class="ts-accordion searchable-card bg-slate-800 border border-slate-700/70 rounded-xl overflow-hidden group">
+        <summary class="p-4 font-semibold text-sm sm:text-base text-slate-200 cursor-pointer bg-slate-800/90 hover:bg-slate-700/50 flex justify-between items-center transition-colors">
+          <span>C. Clasificación según la Disponibilidad del Código Fuente</span>
+          <span class="transform group-open:rotate-180 transition-transform text-slate-400">▼</span>
+        </summary>
+        <div class="p-4 sm:p-5 border-t border-slate-700/50 space-y-4">
+          <p class="text-xs sm:text-sm text-slate-300">
+            Esta clasificación contempla si el código fuente está accesible para el usuario o desarrollador, lo cual determina directamente la posibilidad de estudiar, modificar, auditar y adaptar el software.
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-700 flex flex-col justify-between">
+              <div>
+                <h4 class="font-bold text-emerald-400 text-sm sm:text-base">Código Abierto (Open Source)</h4>
+                <p class="text-xs sm:text-sm text-slate-300 mt-2"><strong class="text-white">Descripción:</strong> El código fuente está totalmente disponible de manera pública y transparente.</p>
+                <p class="text-xs text-slate-300 mt-2"><strong class="text-white">Impacto / Características:</strong> Permite a cualquiera ver, estudiar, auditar, modificar y mejorar el código. Fomenta la colaboración masiva.</p>
+              </div>
+              <p class="text-xs text-slate-400 mt-3 pt-2 border-t border-slate-800"><strong class="text-slate-300">Ejemplos:</strong> Linux, Apache HTTP Server, MySQL, Mozilla Firefox.</p>
+            </div>
+
+            <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-700 flex flex-col justify-between">
+              <div>
+                <h4 class="font-bold text-rose-400 text-sm sm:text-base">Código Cerrado (Propietario / Privativo)</h4>
+                <p class="text-xs sm:text-sm text-slate-300 mt-2"><strong class="text-white">Descripción:</strong> El código fuente no está disponible para el público ni para los usuarios.</p>
+                <p class="text-xs text-slate-300 mt-2"><strong class="text-white">Impacto / Características:</strong> El usuario solo recibe e instala la versión compilada (ejecutable). No se puede estudiar ni modificar internamente.</p>
+              </div>
+              <p class="text-xs text-slate-400 mt-3 pt-2 border-t border-slate-800"><strong class="text-slate-300">Ejemplos:</strong> Microsoft Windows, AutoCAD, Photoshop, juegos comerciales.</p>
+            </div>
+
+            <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-700 flex flex-col justify-between">
+              <div>
+                <h4 class="font-bold text-amber-400 text-sm sm:text-base">Código Parcialmente Disponible</h4>
+                <p class="text-xs sm:text-sm text-slate-300 mt-2"><strong class="text-white">Descripción:</strong> Solo se comparte una parte del código fuente o se brinda acceso bajo condiciones o licencias restringidas.</p>
+                <p class="text-xs text-slate-300 mt-2"><strong class="text-white">Impacto / Características:</strong> Permite extender o integrar funciones mediante APIs o módulos específicos, pero mantiene el núcleo cerrado.</p>
+              </div>
+              <p class="text-xs text-slate-400 mt-3 pt-2 border-t border-slate-800"><strong class="text-slate-300">Ejemplos:</strong> Algunos controladores (drivers) propietarios, SDKs comerciales, proyectos híbridos.</p>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <!-- D. LICENCIAS Y MODELO COMERCIAL -->
+      <details class="ts-accordion searchable-card bg-slate-800 border border-slate-700/70 rounded-xl overflow-hidden group">
+        <summary class="p-4 font-semibold text-sm sm:text-base text-slate-200 cursor-pointer bg-slate-800/90 hover:bg-slate-700/50 flex justify-between items-center transition-colors">
+          <span>D. Clasificación según Términos de Licencia y Modelo Comercial</span>
+          <span class="transform group-open:rotate-180 transition-transform text-slate-400">▼</span>
+        </summary>
+        <div class="p-3 sm:p-5 border-t border-slate-700/50">
+          <div class="overflow-x-auto w-full">
+            <table class="w-full min-w-[600px] text-xs sm:text-sm text-left">
+              <thead class="bg-slate-700/50 text-slate-200">
+                <tr>
+                  <th class="p-2.5 sm:p-3 rounded-l-lg">Tipo de Licencia / Modelo</th>
+                  <th class="p-2.5 sm:p-3">Descripción y Términos de Uso</th>
+                  <th class="p-2.5 sm:p-3 rounded-r-lg">Ejemplos</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-700/50">
+                <tr>
+                  <td class="p-2.5 sm:p-3 font-semibold text-emerald-400">Software Libre</td>
+                  <td class="p-2.5 sm:p-3 text-slate-300">Enfocado en la libertad y control del usuario. Otorga las libertades de usar, estudiar, modificar y redistribuir el código. Exige que las derivaciones mantengan las mismas libertades (copyleft).</td>
+                  <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                    <span class="bg-emerald-900/50 text-emerald-300 px-2 py-0.5 rounded text-xs">GNU/Linux</span>
+                    <span class="bg-emerald-900/50 text-emerald-300 px-2 py-0.5 rounded text-xs">LibreOffice</span>
+                    <span class="bg-emerald-900/50 text-emerald-300 px-2 py-0.5 rounded text-xs">GIMP</span>
+                    <span class="bg-emerald-900/50 text-emerald-300 px-2 py-0.5 rounded text-xs">Mozilla Firefox</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 sm:p-3 font-semibold text-rose-400">Software Propietario / Privativo</td>
+                  <td class="p-2.5 sm:p-3 text-slate-300">El código fuente es privado y cerrado. El usuario recibe una licencia de uso con restricciones de modificación y distribución.</td>
+                  <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                    <span class="bg-rose-900/50 text-rose-300 px-2 py-0.5 rounded text-xs">Microsoft Windows</span>
+                    <span class="bg-rose-900/50 text-rose-300 px-2 py-0.5 rounded text-xs">Adobe Photoshop</span>
+                    <span class="bg-rose-900/50 text-rose-300 px-2 py-0.5 rounded text-xs">macOS</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 sm:p-3 font-semibold text-blue-400">Software Gratuito (Freeware)</td>
+                  <td class="p-2.5 sm:p-3 text-slate-300">Su uso es sin costo económico, pero el autor mantiene todos los derechos y el código fuente no está disponible.</td>
+                  <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                    <span class="bg-blue-900/50 text-blue-300 px-2 py-0.5 rounded text-xs">Google Chrome</span>
+                    <span class="bg-blue-900/50 text-blue-300 px-2 py-0.5 rounded text-xs">Skype</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 sm:p-3 font-semibold text-amber-400">Software de Prueba (Shareware / Trial)</td>
+                  <td class="p-2.5 sm:p-3 text-slate-300">Distribuido gratuitamente por un tiempo o con funcionalidades limitadas para evaluación antes de su compra.</td>
+                  <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                    <span class="bg-amber-900/50 text-amber-300 px-2 py-0.5 rounded text-xs">WinRAR</span>
+                    <span class="bg-amber-900/50 text-amber-300 px-2 py-0.5 rounded text-xs">Demos de Antivirus</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 sm:p-3 font-semibold text-purple-400">Software Comercial</td>
+                  <td class="p-2.5 sm:p-3 text-slate-300">Desarrollado para su venta con fines de lucro. Puede ser propietario o libre según los términos contractuales de soporte.</td>
+                  <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                    <span class="bg-purple-900/50 text-purple-300 px-2 py-0.5 rounded text-xs">Microsoft 365</span>
+                    <span class="bg-purple-900/50 text-purple-300 px-2 py-0.5 rounded text-xs">AutoCAD</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 sm:p-3 font-semibold text-indigo-400">Software bajo Suscripción (SaaS)</td>
+                  <td class="p-2.5 sm:p-3 text-slate-300">El acceso al software se abona de forma periódica (mensual/anual). Generalmente alojado en la nube.</td>
+                  <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                    <span class="bg-indigo-900/50 text-indigo-300 px-2 py-0.5 rounded text-xs">Adobe Creative Cloud</span>
+                    <span class="bg-indigo-900/50 text-indigo-300 px-2 py-0.5 rounded text-xs">Office 365</span>
+                    <span class="bg-indigo-900/50 text-indigo-300 px-2 py-0.5 rounded text-xs">Spotify Premium</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 sm:p-3 font-semibold text-slate-400">Dominio Público</td>
+                  <td class="p-2.5 sm:p-3 text-slate-300">Carece de derechos de autor o fue liberado explícitamente por el autor. Libertad total sin contratos ni licencias.</td>
+                  <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                    <span class="bg-slate-700 text-slate-300 px-2 py-0.5 rounded text-xs">Software antiguo liberado</span>
+                    <span class="bg-slate-700 text-slate-300 px-2 py-0.5 rounded text-xs">NASA en GitHub</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+    </main>
+
+    <main id="tab-archivos" class="tab-content space-y-4 sm:space-y-6">
+      <div class="searchable-card bg-slate-800 p-4 sm:p-6 rounded-2xl border border-slate-700/70 shadow-md space-y-4">
+        <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+          <span class="p-2 bg-indigo-900/50 text-indigo-400 rounded-lg text-base">📄</span> 
+          Concepto y Estructura Identificativa del Archivo
+        </h2>
+        <p class="text-sm leading-relaxed text-slate-200">
+          Un <strong class="text-white">archivo (fichero)</strong> es un conjunto organizado de datos e información almacenado en un medio digital. Es la unidad básica para manipular información y es gestionado por el sistema de archivos del sistema operativo (lectura, escritura, copia, renombramiento, eliminación y gestión de permisos).
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-2">
+          <div class="p-3 sm:p-4 bg-slate-900/60 rounded-xl border border-slate-700">
+            <span class="text-xs font-bold text-indigo-400 uppercase">1. Nombre</span>
+            <p class="text-xs sm:text-sm mt-1 text-slate-300">Etiqueta asignada por el usuario o sistema para su identificación única en un directorio.</p>
+          </div>
+          <div class="p-3 sm:p-4 bg-slate-900/60 rounded-xl border border-slate-700">
+            <span class="text-xs font-bold text-indigo-400 uppercase">2. Extensión</span>
+            <p class="text-xs sm:text-sm mt-1 text-slate-300">Sufijo precedido por un punto (ej. <code class="text-amber-300">.docx</code>) que indica la naturaleza del contenido y con qué programa abrirlo.</p>
+          </div>
+          <div class="p-3 sm:p-4 bg-slate-900/60 rounded-xl border border-slate-700">
+            <span class="text-xs font-bold text-indigo-400 uppercase">3. Metadatos</span>
+            <p class="text-xs sm:text-sm mt-1 text-slate-300">Datos no visibles directamente: fecha de creación/modificación, tamaño, permisos de acceso, propietario.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLA EXTENSIONES COMPLETA CON COLORES PERSONALIZADOS PARA CADA CATEGORÍA -->
+      <div class="searchable-card bg-slate-800 p-4 sm:p-6 rounded-2xl border border-slate-700/70 shadow-md space-y-4">
+        <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+          <span>🗂️</span> Clasificación Completa por Contenido y Formatos
+        </h2>
+
+        <div class="overflow-x-auto w-full">
+          <table class="w-full min-w-[550px] text-xs sm:text-sm text-left">
+            <thead class="bg-slate-700/50 text-slate-200">
+              <tr>
+                <th class="p-2.5 sm:p-3 rounded-l-lg">Categoría</th>
+                <th class="p-2.5 sm:p-3">Descripción / Subtipos</th>
+                <th class="p-2.5 sm:p-3 rounded-r-lg">Extensiones Principales</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/50">
+              <tr>
+                <td class="p-2.5 sm:p-3 font-semibold text-blue-400">1. Texto</td>
+                <td class="p-2.5 sm:p-3 text-slate-300">Texto plano, procesadores de texto y documentos enriquecidos o de lectura.</td>
+                <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                  <span class="bg-blue-950/80 text-blue-300 border border-blue-800/50 px-2 py-0.5 rounded text-xs font-mono">.txt</span>
+                  <span class="bg-blue-950/80 text-blue-300 border border-blue-800/50 px-2 py-0.5 rounded text-xs font-mono">.docx</span>
+                  <span class="bg-blue-950/80 text-blue-300 border border-blue-800/50 px-2 py-0.5 rounded text-xs font-mono">.odt</span>
+                  <span class="bg-blue-950/80 text-blue-300 border border-blue-800/50 px-2 py-0.5 rounded text-xs font-mono">.pdf</span>
+                  <span class="bg-blue-950/80 text-blue-300 border border-blue-800/50 px-2 py-0.5 rounded text-xs font-mono">.rtf</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="p-2.5 sm:p-3 font-semibold text-emerald-400">2. Datos / BD</td>
+                <td class="p-2.5 sm:p-3 text-slate-300">Información estructurada, planillas de cálculo y bases relacionales.</td>
+                <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                  <span class="bg-emerald-950/80 text-emerald-300 border border-emerald-800/50 px-2 py-0.5 rounded text-xs font-mono">.xlsx</span>
+                  <span class="bg-emerald-950/80 text-emerald-300 border border-emerald-800/50 px-2 py-0.5 rounded text-xs font-mono">.ods</span>
+                  <span class="bg-emerald-950/80 text-emerald-300 border border-emerald-800/50 px-2 py-0.5 rounded text-xs font-mono">.csv</span>
+                  <span class="bg-emerald-950/80 text-emerald-300 border border-emerald-800/50 px-2 py-0.5 rounded text-xs font-mono">.db</span>
+                  <span class="bg-emerald-950/80 text-emerald-300 border border-emerald-800/50 px-2 py-0.5 rounded text-xs font-mono">.mdb</span>
+                  <span class="bg-emerald-950/80 text-emerald-300 border border-emerald-800/50 px-2 py-0.5 rounded text-xs font-mono">.sqlite</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="p-2.5 sm:p-3 font-semibold text-purple-400">3. Multimedia</td>
+                <td class="p-2.5 sm:p-3 text-slate-300">Imágenes vectoriales/ráster, audio comprimido/sin compresión y video.</td>
+                <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                  <span class="bg-purple-950/80 text-purple-300 border border-purple-800/50 px-2 py-0.5 rounded text-xs font-mono">.jpg</span>
+                  <span class="bg-purple-950/80 text-purple-300 border border-purple-800/50 px-2 py-0.5 rounded text-xs font-mono">.png</span>
+                  <span class="bg-purple-950/80 text-purple-300 border border-purple-800/50 px-2 py-0.5 rounded text-xs font-mono">.gif</span>
+                  <span class="bg-purple-950/80 text-purple-300 border border-purple-800/50 px-2 py-0.5 rounded text-xs font-mono">.svg</span>
+                  <span class="bg-purple-950/80 text-purple-300 border border-purple-800/50 px-2 py-0.5 rounded text-xs font-mono">.mp3</span>
+                  <span class="bg-purple-950/80 text-purple-300 border border-purple-800/50 px-2 py-0.5 rounded text-xs font-mono">.wav</span>
+                  <span class="bg-purple-950/80 text-purple-300 border border-purple-800/50 px-2 py-0.5 rounded text-xs font-mono">.mp4</span>
+                  <span class="bg-purple-950/80 text-purple-300 border border-purple-800/50 px-2 py-0.5 rounded text-xs font-mono">.mkv</span>
+                  <span class="bg-purple-950/80 text-purple-300 border border-purple-800/50 px-2 py-0.5 rounded text-xs font-mono">.mov</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="p-2.5 sm:p-3 font-semibold text-rose-400">4. Ejecutables</td>
+                <td class="p-2.5 sm:p-3 text-slate-300">Instrucciones directas para la CPU o scripts de comandos en SO. ¡Atención!</td>
+                <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                  <span class="bg-rose-950/80 text-rose-300 border border-rose-800/50 px-2 py-0.5 rounded text-xs font-mono">.exe</span>
+                  <span class="bg-rose-950/80 text-rose-300 border border-rose-800/50 px-2 py-0.5 rounded text-xs font-mono">.msi</span>
+                  <span class="bg-rose-950/80 text-rose-300 border border-rose-800/50 px-2 py-0.5 rounded text-xs font-mono">.bat</span>
+                  <span class="bg-rose-950/80 text-rose-300 border border-rose-800/50 px-2 py-0.5 rounded text-xs font-mono">.sh</span>
+                  <span class="bg-rose-950/80 text-rose-300 border border-rose-800/50 px-2 py-0.5 rounded text-xs font-mono">.app</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="p-2.5 sm:p-3 font-semibold text-indigo-400">5. Comprimidos</td>
+                <td class="p-2.5 sm:p-3 text-slate-300">Paquetes que agrupan y reducen tamaño de archivos para envío o resguardo.</td>
+                <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                  <span class="bg-indigo-950/80 text-indigo-300 border border-indigo-800/50 px-2 py-0.5 rounded text-xs font-mono">.zip</span>
+                  <span class="bg-indigo-950/80 text-indigo-300 border border-indigo-800/50 px-2 py-0.5 rounded text-xs font-mono">.rar</span>
+                  <span class="bg-indigo-950/80 text-indigo-300 border border-indigo-800/50 px-2 py-0.5 rounded text-xs font-mono">.7z</span>
+                  <span class="bg-indigo-950/80 text-indigo-300 border border-indigo-800/50 px-2 py-0.5 rounded text-xs font-mono">.tar</span>
+                  <span class="bg-indigo-950/80 text-indigo-300 border border-indigo-800/50 px-2 py-0.5 rounded text-xs font-mono">.gz</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="p-2.5 sm:p-3 font-semibold text-cyan-400">6. Configuración</td>
+                <td class="p-2.5 sm:p-3 text-slate-300">Parámetros de ajuste operativo, librerías del SO y estructuras de datos.</td>
+                <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                  <span class="bg-cyan-950/80 text-cyan-300 border border-cyan-800/50 px-2 py-0.5 rounded text-xs font-mono">.ini</span>
+                  <span class="bg-cyan-950/80 text-cyan-300 border border-cyan-800/50 px-2 py-0.5 rounded text-xs font-mono">.cfg</span>
+                  <span class="bg-cyan-950/80 text-cyan-300 border border-cyan-800/50 px-2 py-0.5 rounded text-xs font-mono">.xml</span>
+                  <span class="bg-cyan-950/80 text-cyan-300 border border-cyan-800/50 px-2 py-0.5 rounded text-xs font-mono">.json</span>
+                  <span class="bg-cyan-950/80 text-cyan-300 border border-cyan-800/50 px-2 py-0.5 rounded text-xs font-mono">.sys</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="p-2.5 sm:p-3 font-semibold text-fuchsia-400">7. Desarrollo</td>
+                <td class="p-2.5 sm:p-3 text-slate-300">Código fuente de programación, scripts y bibliotecas dinámicas de enlace.</td>
+                <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                  <span class="bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-800/50 px-2 py-0.5 rounded text-xs font-mono">.py</span>
+                  <span class="bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-800/50 px-2 py-0.5 rounded text-xs font-mono">.js</span>
+                  <span class="bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-800/50 px-2 py-0.5 rounded text-xs font-mono">.java</span>
+                  <span class="bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-800/50 px-2 py-0.5 rounded text-xs font-mono">.c</span>
+                  <span class="bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-800/50 px-2 py-0.5 rounded text-xs font-mono">.cpp</span>
+                  <span class="bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-800/50 px-2 py-0.5 rounded text-xs font-mono">.dll</span>
+                  <span class="bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-800/50 px-2 py-0.5 rounded text-xs font-mono">.so</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="p-2.5 sm:p-3 font-semibold text-amber-400">8. Temporales</td>
+                <td class="p-2.5 sm:p-3 text-slate-300">Utilizados durante procesos activos o para recuperaciones de emergencia.</td>
+                <td class="p-2.5 sm:p-3 flex flex-wrap gap-1">
+                  <span class="bg-amber-950/80 text-amber-300 border border-amber-800/50 px-2 py-0.5 rounded text-xs font-mono">.tmp</span>
+                  <span class="bg-amber-950/80 text-amber-300 border border-amber-800/50 px-2 py-0.5 rounded text-xs font-mono">~$...</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <main id="tab-seguridad" class="tab-content space-y-4 sm:space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        
+        <div class="searchable-card bg-slate-800 p-4 sm:p-6 rounded-2xl border border-slate-700/70 shadow-md space-y-3">
+          <h3 class="font-bold text-base sm:text-lg text-white flex items-center gap-2">
+            <span class="p-2 bg-emerald-900/50 text-emerald-400 rounded-lg">🔒</span>
+            1. Fuentes de Descarga y Autenticidad
+          </h3>
+          <p class="text-xs sm:text-sm text-slate-300">Descargar únicamente de repositorios oficiales (tiendas oficiales o sitio directo del creador). Evitar sitios sospechosos para prevenir malware, ransomware y robos de datos.</p>
+          <div class="p-3 bg-slate-900/60 border border-slate-700 rounded-lg text-xs space-y-1">
+            <p><strong class="text-emerald-400">💡 Verificación:</strong> Comprobar protocolo <code class="text-emerald-300">https://</code>, exactitud del dominio (evitar sitios clones) y firma digital en las propiedades del instalador.</p>
+            <p class="text-slate-400 pt-1"><em>Ejemplo:</em> Bajar WhatsApp desde Google Play Store o App Store y no desde un archivo <code class="text-rose-300">.apk</code> desconocido en un grupo de chat.</p>
+          </div>
+        </div>
+
+        <div class="searchable-card bg-slate-800 p-4 sm:p-6 rounded-2xl border border-slate-700/70 shadow-md space-y-3">
+          <h3 class="font-bold text-base sm:text-lg text-white flex items-center gap-2">
+            <span class="p-2 bg-blue-900/50 text-blue-400 rounded-lg">💻</span>
+            2. Compatibilidad del Equipo
+          </h3>
+          <p class="text-xs sm:text-sm text-slate-300">Cotejar requisitos mínimos y recomendados: RAM disponible, arquitectura del procesador (32 o 64 bits), espacio libre en disco y versión del SO.</p>
+          <div class="p-3 bg-rose-950/40 border border-rose-800/50 text-rose-300 rounded-lg text-xs">
+            <strong>⚠️ Consecuencias:</strong> Forzar programas incompatibles genera congelamientos del equipo, lentitud extrema, errores al iniciar (crashes) o bloqueos del sistema.
+          </div>
+        </div>
+
+        <div class="searchable-card bg-slate-800 p-4 sm:p-6 rounded-2xl border border-slate-700/70 shadow-md space-y-3">
+          <h3 class="font-bold text-base sm:text-lg text-white flex items-center gap-2">
+            <span class="p-2 bg-amber-900/50 text-amber-400 rounded-lg">⚠️</span>
+            3. Precauciones y Proceso de Instalación
+          </h3>
+          <p class="text-xs sm:text-sm text-slate-300">Desconfiar de adjuntos no solicitados. Ojo con dobles extensiones engañosas como <code class="text-rose-300">Factura_Pendiente.pdf.exe</code>. Analizar con antivirus o <strong>VirusTotal</strong> antes de abrir.</p>
+          <div class="p-3 bg-amber-950/40 border border-amber-800/50 text-amber-300 rounded-lg text-xs">
+            <strong>Riesgo del clic automático:</strong> Avanzar a ciegas ("Siguiente-Siguiente") instala software secundario (bloatware/adware). Usar siempre la <strong>Instalación Personalizada/Avanzada</strong> para desmarcar ofertas publicitarias.
+          </div>
+        </div>
+
+        <div class="searchable-card bg-slate-800 p-4 sm:p-6 rounded-2xl border border-slate-700/70 shadow-md space-y-3">
+          <h3 class="font-bold text-base sm:text-lg text-white flex items-center gap-2">
+            <span class="p-2 bg-purple-900/50 text-purple-400 rounded-lg">🛡️</span>
+            4. Permisos, Backups y Desinstalación Limpia
+          </h3>
+          <p class="text-xs sm:text-sm text-slate-300">Conceder permisos estrictamente necesarios (cámara a Zoom, pero NO ubicación GPS a una linterna). Realizar copias de seguridad (Backups) periódicas en la nube o disco externo.</p>
+          <div class="p-3 bg-slate-900/60 border border-slate-700 rounded-lg text-xs text-slate-300">
+            <strong class="text-purple-400">Desinstalación Limpia:</strong> Utilizar el gestor nativo del sistema (<em>Configuración > Aplicaciones</em>). Borrar directamente la carpeta del programa deja archivos huérfanos y claves corruptas en el Registro.
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <main id="tab-mantenimiento" class="tab-content space-y-4 sm:space-y-6">
+      
+      <!-- INTRO MANTENIMIENTO -->
+      <div class="searchable-card bg-slate-800 p-4 sm:p-6 rounded-2xl border border-slate-700/70 shadow-md space-y-4">
+        <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+          <span class="p-2 bg-slate-700 rounded-lg">🛠️</span>
+          Concepto y Tipos de Mantenimiento del Sistema Operativo
+        </h2>
+        <p class="text-xs sm:text-sm leading-relaxed text-slate-200">
+          El mantenimiento del sistema operativo es un conjunto de tareas y acciones periódicas para preservar el correcto funcionamiento, la estabilidad y la seguridad del equipo. Incluye limpieza de temporales, gestión de memoria RAM, control de inicio y escaneo contra malware.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 bg-slate-900/60 border-l-4 border-blue-500 rounded-r-xl border border-slate-700">
+            <h4 class="font-bold text-blue-400 text-xs sm:text-sm">Mantenimiento Preventivo</h4>
+            <p class="text-xs text-slate-300 mt-1">Tareas para evitar que ocurran fallas (actualizar el sistema, analizar en busca de virus, borrar temporales y optimizar unidades).</p>
+          </div>
+          <div class="p-4 bg-slate-900/60 border-l-4 border-amber-500 rounded-r-xl border border-slate-700">
+            <h4 class="font-bold text-amber-400 text-xs sm:text-sm">Mantenimiento Correctivo</h4>
+            <p class="text-xs text-slate-300 mt-1">Tareas aplicadas cuando se detecta una falla (reparar archivos dañados, restaurar sistema a un punto estable anterior).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACCORDIONS MANTENIMIENTO -->
+      <details class="ts-accordion searchable-card bg-slate-800 border border-slate-700/70 rounded-xl overflow-hidden group" open>
+        <summary class="p-4 font-semibold text-sm sm:text-base text-slate-200 cursor-pointer bg-slate-800/90 hover:bg-slate-700/50 flex justify-between items-center transition-colors">
+          <span>📊 Administrador de Tareas y Monitor de Recursos</span>
+          <span class="transform group-open:rotate-180 transition-transform text-slate-400">▼</span>
+        </summary>
+        <div class="p-4 sm:p-5 border-t border-slate-700/50 space-y-4 text-xs sm:text-sm">
+          <p class="text-slate-200"><strong class="text-white">Administrador de Tareas (Ctrl + Shift + Esc):</strong> Muestra supervisión en tiempo real de los procesos activos y del consumo de hardware. Permite finalizar tareas que no responden.</p>
+          
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="p-3 bg-slate-900/50 border border-slate-700 rounded-lg">
+              <span class="font-bold text-blue-400">CPU</span>
+              <p class="text-xs text-slate-300 mt-1">% de capacidad usada y Frecuencia en tiempo real (GHz).</p>
+            </div>
+            <div class="p-3 bg-slate-900/50 border border-slate-700 rounded-lg">
+              <span class="font-bold text-emerald-400">Memoria RAM</span>
+              <p class="text-xs text-slate-300 mt-1">En uso, disponible y asignada (memoria virtual).</p>
+            </div>
+            <div class="p-3 bg-slate-900/50 border border-slate-700 rounded-lg">
+              <span class="font-bold text-amber-400">Disco</span>
+              <p class="text-xs text-slate-300 mt-1">% de tiempo activo y tiempo de respuesta (ms).</p>
+            </div>
+            <div class="p-3 bg-slate-900/50 border border-slate-700 rounded-lg">
+              <span class="font-bold text-purple-400">Red</span>
+              <p class="text-xs text-slate-300 mt-1">Volumen de datos enviados y recibidos.</p>
+            </div>
+          </div>
+
+          <div class="p-4 bg-amber-950/40 border border-amber-800/50 rounded-xl text-xs space-y-2">
+            <h5 class="font-bold text-amber-300 text-xs sm:text-sm">💡 Caso Práctico: CPU al 100%</h5>
+            <ol class="list-decimal pl-4 space-y-1 text-slate-300">
+              <li>Presionar <code class="text-amber-200">Ctrl + Shift + Esc</code> para abrir el Administrador de Tareas.</li>
+              <li>Entrar en la pestaña <strong>Procesos</strong> y hacer clic en la columna <strong>CPU</strong> para ordenar de mayor a menor consumo.</li>
+              <li>Analizar el origen del proceso con clic derecho ➔ <em>Propiedades</em> o <em>Abrir ubicación del archivo</em>.</li>
+              <li>Si pertenece a una aplicación conocida trabada, seleccionar <strong>Finalizar Tarea</strong>. Evitar cerrar procesos desconocidos del sistema.</li>
+            </ol>
+          </div>
+
+          <p class="text-slate-300"><strong class="text-white">Monitor de Recursos:</strong> A diferencia del Administrador de Tareas (vista rápida), el Monitor de Recursos permite investigar a nivel avanzado qué archivo o servicio específico está generando un cuello de botella en disco, red o CPU.</p>
+        </div>
+      </details>
+
+      <details class="ts-accordion searchable-card bg-slate-800 border border-slate-700/70 rounded-xl overflow-hidden group">
+        <summary class="p-4 font-semibold text-sm sm:text-base text-slate-200 cursor-pointer bg-slate-800/90 hover:bg-slate-700/50 flex justify-between items-center transition-colors">
+          <span>📑 Visor de Eventos y Auditoría de Logs</span>
+          <span class="transform group-open:rotate-180 transition-transform text-slate-400">▼</span>
+        </summary>
+        <div class="p-4 sm:p-5 border-t border-slate-700/50 text-xs sm:text-sm space-y-4">
+          <p class="text-slate-300">Herramienta para consultar y filtrar los registros (logs) estructurados creados por Windows, controladores y aplicaciones ante hechos relevantes.</p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h5 class="font-bold text-white mb-2">Niveles de Eventos:</h5>
+              <ul class="space-y-1 text-xs">
+                <li class="p-2 bg-emerald-950/40 border border-emerald-800/40 rounded text-emerald-300"><strong>Información:</strong> Ejecución exitosa de operación normal.</li>
+                <li class="p-2 bg-amber-950/40 border border-amber-800/40 rounded text-amber-300"><strong>Advertencia:</strong> Situación que podría generar un problema futuro.</li>
+                <li class="p-2 bg-rose-950/40 border border-rose-800/40 rounded text-rose-300"><strong>Error:</strong> Una operación falló pero el sistema puede continuar.</li>
+                <li class="p-2 bg-red-900/90 text-white rounded"><strong>Crítico:</strong> Fallo grave que provoca reinicio o pérdida de datos.</li>
+              </ul>
+            </div>
+            <div>
+              <h5 class="font-bold text-white mb-2">Registros Principales:</h5>
+              <ul class="space-y-1 text-xs text-slate-300">
+                <li class="p-2 bg-slate-900/50 border border-slate-700 rounded"><strong>Aplicación:</strong> Errores e informes de programas instalados.</li>
+                <li class="p-2 bg-slate-900/50 border border-slate-700 rounded"><strong>Seguridad:</strong> Inicios de sesión, privilegios y auditorías.</li>
+                <li class="p-2 bg-slate-900/50 border border-slate-700 rounded"><strong>Instalación:</strong> Eventos durante updates o instalación del SO.</li>
+                <li class="p-2 bg-slate-900/50 border border-slate-700 rounded"><strong>Sistema:</strong> Componentes internos, controladores y kernel.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="ts-accordion searchable-card bg-slate-800 border border-slate-700/70 rounded-xl overflow-hidden group">
+        <summary class="p-4 font-semibold text-sm sm:text-base text-slate-200 cursor-pointer bg-slate-800/90 hover:bg-slate-700/50 flex justify-between items-center transition-colors">
+          <span>🚀 Inicio, Software Residente y Servicios de Windows</span>
+          <span class="transform group-open:rotate-180 transition-transform text-slate-400">▼</span>
+        </summary>
+        <div class="p-4 sm:p-5 border-t border-slate-700/50 text-xs sm:text-sm space-y-4">
+          <p class="text-slate-300"><strong class="text-white">Secuencia de Arranque:</strong> Firmware (BIOS/UEFI) ➔ Cargador de Arranque ➔ Inicialización del Kernel y Servicios ➔ Inicio de Sesión de Usuario.</p>
+          <p class="text-slate-300"><strong class="text-white">Impacto de Inicio:</strong> Medida en el Administrador de Tareas que indica cuánto retrasa un programa el arranque de Windows.</p>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div class="p-3 bg-rose-950/40 border border-rose-800/50 text-rose-300 rounded-lg">
+              <strong>Impacto Alto:</strong> &gt; 1 seg de CPU o &gt; 3 MB E/S de disco.
+            </div>
+            <div class="p-3 bg-amber-950/40 border border-amber-800/50 text-amber-300 rounded-lg">
+              <strong>Impacto Medio:</strong> 300 ms - 1 seg CPU o 300 KB - 3 MB disco.
+            </div>
+            <div class="p-3 bg-emerald-950/40 border border-emerald-800/50 text-emerald-300 rounded-lg">
+              <strong>Impacto Bajo:</strong> &lt; 300 ms CPU y &lt; 300 KB disco.
+            </div>
+          </div>
+
+          <p class="text-slate-300"><strong class="text-white">Gestión de Servicios:</strong> Administrados por <code class="text-blue-300">servicios.exe</code>. Tipos de inicio: <em>Automático</em> (arranca siempre), <em>Manual</em> (inicia solo a demanda, ideal para probar antes de deshabilitar) y <em>Deshabilitado</em>.</p>
+        </div>
+      </details>
+
+      <details class="ts-accordion searchable-card bg-slate-800 border border-slate-700/70 rounded-xl overflow-hidden group">
+        <summary class="p-4 font-semibold text-sm sm:text-base text-slate-200 cursor-pointer bg-slate-800/90 hover:bg-slate-700/50 flex justify-between items-center transition-colors">
+          <span>💾 Almacenamiento, Limpieza y HDD vs SSD (TRIM)</span>
+          <span class="transform group-open:rotate-180 transition-transform text-slate-400">▼</span>
+        </summary>
+        <div class="p-4 sm:p-5 border-t border-slate-700/50 text-xs sm:text-sm space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-700">
+              <h4 class="font-bold text-white">Disco Rígido Mecánico (HDD)</h4>
+              <p class="text-xs text-slate-300 mt-2">Almacena datos en platos magnéticos que giran y requieren movimiento físico del cabezal. Sufre fragmentación. <strong>SÍ requiere Desfragmentación periódica</strong> para ordenar los archivos en bloques contiguos.</p>
+            </div>
+            <div class="p-4 bg-slate-900/60 rounded-xl border border-slate-700">
+              <h4 class="font-bold text-emerald-400">Unidad Estado Sólido (SSD)</h4>
+              <p class="text-xs text-slate-300 mt-2">Memoria electrónica sin partes móviles. Utiliza la instrucción <strong>TRIM</strong> para comunicar al SSD qué bloques ya no tienen datos útiles y prepararlos para nuevas escrituras.</p>
+              <p class="text-xs font-bold text-rose-400 mt-2">❌ NUNCA desfragmentar un SSD: Genera escrituras innecesarias que causan un desgaste prematuro de las celdas flash sin aportar ningún beneficio de velocidad.</p>
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-900/60 border border-slate-700 rounded-xl text-xs space-y-2">
+            <h5 class="font-bold text-blue-400 text-xs sm:text-sm">Herramientas Nativas de Limpieza:</h5>
+            <p class="text-slate-300"><strong class="text-white">Liberador de espacio (Disk Cleanup):</strong> Limpieza manual de temporales del sistema, actualizaciones anteriores y papelera.</p>
+            <p class="text-slate-300"><strong class="text-white">Sensor de Almacenamiento (Storage Sense):</strong> Automatiza la liberación periódica de espacio sin intervención del usuario.</p>
+          </div>
+        </div>
+      </details>
+
+    </main>
+
+  </div>
+
+  <script>
+    // CAMBIO DE PESTAÑAS MEDIANTE JAVASCRIPT
+    function switchTab(evt, tabId) {
+      document.querySelectorAll('.tab-content').forEach(panel => {
+        panel.classList.remove('active');
+      });
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
+        btn.classList.add('bg-slate-800', 'text-slate-300');
+      });
+
+      const activeTab = document.getElementById(tabId);
+      if (activeTab) {
+        activeTab.classList.add('active');
+      }
+
+      const clickedBtn = evt ? evt.currentTarget : null;
+      if (clickedBtn) {
+        clickedBtn.classList.remove('bg-slate-800', 'text-slate-300');
+        clickedBtn.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
+      }
+
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput && searchInput.value) {
+        searchInput.value = '';
+        filterContent();
+      }
+    }
+
+    // DESPLEGAR Y PLEGAR ACORDEONES
+    function setAccordions(openState) {
+      document.querySelectorAll('.ts-accordion').forEach(acc => {
+        acc.open = openState;
+      });
+    }
+
+    // BÚSQUEDA EN TIEMPO REAL CON FILTRADO DINÁMICO
+    function filterContent() {
+      const query = document.getElementById('searchInput').value.toLowerCase().trim();
+      const searchStats = document.getElementById('searchStats');
+      const cards = document.querySelectorAll('.searchable-card');
+      
+      if (query === '') {
+        cards.forEach(card => card.style.display = '');
+        searchStats.classList.add('hidden');
+        return;
+      }
+
+      let matches = 0;
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (text.includes(query)) {
+          card.style.display = '';
+          matches++;
+
+          if (card.tagName === 'DETAILS') {
+            card.open = true;
+          }
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      searchStats.textContent = `Resultados encontrados en esta sección: ${matches}`;
+      searchStats.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
